@@ -26,7 +26,7 @@ One of three parallel Stage 5 reviewer personas in the `dotnet-solution-architec
 
 1. Read the staged diff (`git diff --staged`) and enough of `SPEC.md` to understand intent — keep total context under roughly 2,000 tokens.
 2. Walk every changed line in scope (see Review Scope above). For each issue found, note the exact file and line number from the diff.
-3. Do not propose fixes outside this scope, even if noticed — flag them is out of bounds for this persona.
+3. Do not propose fixes outside this scope, even if noticed.
 4. Assign a verdict:
    - `pass`: no findings, or only `minor` findings.
    - `concerns`: at least one `major` finding, no `blocker`.

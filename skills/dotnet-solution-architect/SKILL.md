@@ -37,37 +37,37 @@ At the start of every invocation, check for this file. If present, resume from `
 
 ### Stage 1 — Requirements
 
-**REQUIRED SUB-SKILL:** Use `dictation-spec-writer` on the raw dictation input, which itself hands off to `superpowers:brainstorming` for clarification and confirmation.
+**REQUIRED SUB-SKILL:** Use `core-agentic:dictation-spec-writer` on the raw dictation input, which itself hands off to `superpowers:brainstorming` for clarification and confirmation.
 **Output:** `SPEC.md`. Update state: `stage: 2`, `artifacts.spec: "SPEC.md"`.
 
 ### Stage 2 — Architecture & Decisions
 
 1. **REQUIRED SUB-SKILL:** Use `superpowers:writing-plans` against `SPEC.md` to draft `PLAN.md`.
-2. **REQUIRED SUB-SKILL:** Use `decision-recorder` for each significant decision made while drafting the plan, appending to `DECISIONS.md`.
-3. **REQUIRED SUB-SKILL:** Use `replan` against `SPEC.md`, `DECISIONS.md`, and the draft `PLAN.md` to do the final review pass and finalize the plan.
+2. **REQUIRED SUB-SKILL:** Use `core-agentic:decision-recorder` for each significant decision made while drafting the plan, appending to `DECISIONS.md`.
+3. **REQUIRED SUB-SKILL:** Use `core-agentic:replan` against `SPEC.md`, `DECISIONS.md`, and the draft `PLAN.md` to do the final review pass and finalize the plan.
 
 **Output:** `PLAN.md`, `DECISIONS.md`. Update state: `stage: 3`, `artifacts.plan: "PLAN.md"`, `artifacts.decisions: "DECISIONS.md"`.
 
 ### Stage 3 — Isolated TDD Implementation
 
-1. **REQUIRED SUB-SKILL:** Use `superpowers:using-git-worktrees` to create an isolated worktree for this feature. Record its path in `worktree`.
+1. **REQUIRED SUB-SKILL:** Use `superpowers:using-git-worktrees` to ensure an isolated worktree exists for this feature — if `worktree` is already recorded in `.das-state.json`, verify and reuse it, do not create a new one. Record its path in `worktree`.
 2. **REQUIRED SUB-SKILL:** Use `superpowers:executing-plans` to walk `PLAN.md` task-by-task inside that worktree, applying `superpowers:test-driven-development`'s red-green-refactor cycle for each task.
 
 **Output:** compiling source and passing tests in the worktree. Update state: `stage: 4`.
 
 ### Stage 4 — Hard Verification Gate
 
-**REQUIRED SUB-SKILL:** Use `hard-verification-gate` against the worktree.
+**REQUIRED SUB-SKILL:** Use `core-agentic:hard-verification-gate` against the worktree.
 
 - If it reports PASS: stage the full worktree diff (`git add -A` in the worktree) — Stage 5's reviewer skills all read `git diff --staged` and produce nothing meaningful against an empty staging area. Then update state to `stage: 5` and continue.
 - If it reports a paused pipeline (its own report of what's still broken): STOP here. Leave `stage: 4` in the state file. Present the report to the user and wait — do not proceed to Stage 5 and do not touch the worktree.
 
 ### Stage 5 — Triple Parallel Audit
 
-**REQUIRED SUB-SKILL:** Use `superpowers:dispatching-parallel-agents` to run three concurrent, read-only agents against `git diff --staged` in the worktree (each capped to roughly 2,000 tokens of context: the diff plus `SPEC.md`):
-- One running `reviewer-micro` → `REVIEW_MICRO.json`
-- One running `reviewer-macro` → `REVIEW_MACRO.json`
-- One running `reviewer-ops` → `REVIEW_OPS.json`
+**REQUIRED SUB-SKILL:** Use `superpowers:dispatching-parallel-agents` to run three concurrent, read-only agents against `git diff --staged` in the worktree (each capped to roughly 2,000 tokens of context: the diff plus `SPEC.md`). Since `SPEC.md` lives in the target repo root, not inside the worktree, the orchestrator passes each dispatched agent `SPEC.md`'s resolved content directly in its prompt rather than a bare filename; the three `REVIEW_*.json` outputs are written alongside the other pipeline artifacts (not inside the worktree):
+- One running `core-agentic:reviewer-micro` → `REVIEW_MICRO.json`
+- One running `core-agentic:reviewer-macro` → `REVIEW_MACRO.json`
+- One running `core-agentic:reviewer-ops` → `REVIEW_OPS.json`
 
 **Output:** the three JSON files. Update state: `stage: 6`.
 
@@ -82,11 +82,11 @@ At the start of every invocation, check for this file. If present, resume from `
 
 | Stage | Entry skill(s) | Output |
 |---|---|---|
-| 1 | `dictation-spec-writer` → `superpowers:brainstorming` | `SPEC.md` |
-| 2 | `superpowers:writing-plans` → `decision-recorder` → `replan` | `PLAN.md`, `DECISIONS.md` |
+| 1 | `core-agentic:dictation-spec-writer` → `superpowers:brainstorming` | `SPEC.md` |
+| 2 | `superpowers:writing-plans` → `core-agentic:decision-recorder` → `core-agentic:replan` | `PLAN.md`, `DECISIONS.md` |
 | 3 | `superpowers:using-git-worktrees` → `superpowers:executing-plans` (+ `superpowers:test-driven-development`) | passing tests in worktree |
-| 4 | `hard-verification-gate` (→ `superpowers:systematic-debugging` on failure) | PASS + staged diff, or paused report |
-| 5 | `superpowers:dispatching-parallel-agents` (`reviewer-micro`/`macro`/`ops`) | 3× `REVIEW_*.json` |
+| 4 | `core-agentic:hard-verification-gate` (→ `superpowers:systematic-debugging` on failure) | PASS + staged diff, or paused report |
+| 5 | `superpowers:dispatching-parallel-agents` (`core-agentic:reviewer-micro`, `core-agentic:reviewer-macro`, `core-agentic:reviewer-ops`) | 3× `REVIEW_*.json` |
 | 6 | `superpowers:receiving-code-review` → `superpowers:finishing-a-development-branch` | merge, or loop to Stage 3 |
 
 ## Common Mistakes
