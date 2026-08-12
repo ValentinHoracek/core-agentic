@@ -1,0 +1,11 @@
+{
+  "name": "core-agentic",
+  "description": "Valentin Horacek's personal AI governance and multi-stage execution drivers for the ValentinHoracek.Core ecosystem",
+  "version": "0.1.0",
+  "author": {
+    "name": "Valentin Horacek",
+    "email": "valentin.horacek@gmail.com"
+  },
+  "license": "UNLICENSED",
+  "keywords": ["dotnet", "csharp", "tdd", "code-review", "solution-architect"]
+}
