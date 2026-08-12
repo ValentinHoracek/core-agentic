@@ -59,7 +59,7 @@ At the start of every invocation, check for this file. If present, resume from `
 
 **REQUIRED SUB-SKILL:** Use `hard-verification-gate` against the worktree.
 
-- If it reports PASS: update state to `stage: 5` and continue.
+- If it reports PASS: stage the full worktree diff (`git add -A` in the worktree) — Stage 5's reviewer skills all read `git diff --staged` and produce nothing meaningful against an empty staging area. Then update state to `stage: 5` and continue.
 - If it reports a paused pipeline (its own report of what's still broken): STOP here. Leave `stage: 4` in the state file. Present the report to the user and wait — do not proceed to Stage 5 and do not touch the worktree.
 
 ### Stage 5 — Triple Parallel Audit
@@ -85,7 +85,7 @@ At the start of every invocation, check for this file. If present, resume from `
 | 1 | `dictation-spec-writer` → `superpowers:brainstorming` | `SPEC.md` |
 | 2 | `superpowers:writing-plans` → `decision-recorder` → `replan` | `PLAN.md`, `DECISIONS.md` |
 | 3 | `superpowers:using-git-worktrees` → `superpowers:executing-plans` (+ `superpowers:test-driven-development`) | passing tests in worktree |
-| 4 | `hard-verification-gate` (→ `superpowers:systematic-debugging` on failure) | PASS or paused report |
+| 4 | `hard-verification-gate` (→ `superpowers:systematic-debugging` on failure) | PASS + staged diff, or paused report |
 | 5 | `superpowers:dispatching-parallel-agents` (`reviewer-micro`/`macro`/`ops`) | 3× `REVIEW_*.json` |
 | 6 | `superpowers:receiving-code-review` → `superpowers:finishing-a-development-branch` | merge, or loop to Stage 3 |
 
@@ -94,4 +94,5 @@ At the start of every invocation, check for this file. If present, resume from `
 - **Skipping the state file.** Without it, an interrupted session restarts the whole pipeline from Stage 1 instead of resuming.
 - **Re-provisioning the worktree on a Stage 3 re-entry from Fix & Loop.** Reuse the existing one recorded in state.
 - **Letting Stage 5 run against a failing build.** Stage 4 PASS is a hard prerequisite — never dispatch reviewers otherwise.
+- **Forgetting to stage the diff after Stage 4 PASS.** `git diff --staged` is empty until something runs `git add`; no sub-skill in Stages 3–4 does this on its own, so the orchestrator must do it directly as part of Stage 4's PASS path before entering Stage 5.
 - **Auto-resolving Stage 6.** The merge-vs-loop decision is always the user's call, never automatic.
