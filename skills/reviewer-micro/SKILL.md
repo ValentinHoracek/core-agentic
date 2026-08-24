@@ -31,7 +31,7 @@ One of three parallel Stage 5 reviewer personas in the `dotnet-solution-architec
    - `pass`: no findings, or only `minor` findings.
    - `concerns`: at least one `major` finding, no `blocker`.
    - `fail`: at least one `blocker` finding (e.g. a null-safety bug that will crash at runtime).
-5. Write output to `REVIEW_MICRO.json` matching exactly:
+5. Write output to the caller-provided path if one was given, else `REVIEW_MICRO.json` in the current directory, matching exactly:
 
 ```json
 {

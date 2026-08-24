@@ -18,7 +18,7 @@ Captures one technical decision as a short, structured entry in `DECISIONS.md`, 
 ## Process
 
 1. Identify the decision in one sentence.
-2. Write an entry using this exact structure, appended to `DECISIONS.md` (create the file with a `# Decisions` heading if it doesn't exist yet):
+2. Write an entry using this exact structure, appended to the caller-provided `DECISIONS.md` path if one was given, else `DECISIONS.md` in the current directory (create the file with a `# Decisions` heading if it doesn't exist yet):
 
 ```markdown
 ## D-00N: <short decision title>
