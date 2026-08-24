@@ -26,7 +26,7 @@ Takes an unstructured dictation dump (spoken stream-of-consciousness, transcribe
    - **Open Questions** — bullet list of anything ambiguous, contradictory, or left unsaid in the dictation.
 3. Do not invent requirements that weren't stated or clearly implied. If something is unclear, put it in Open Questions rather than guessing.
 4. If `mode` (passed in by the orchestrator) is `"with-user"` or unset: present the restructured draft to the user and ask them to confirm it captures their intent before proceeding. If `mode` is `"automatic"`: skip the question — save the draft as-is with a one-line note prepended (`> Auto-approved in automatic mode — YYYY-MM-DD`), so there's a visible audit trail that no human confirmed this draft.
-5. Once confirmed, **REQUIRED SUB-SKILL:** use `superpowers:brainstorming` with the restructured draft as its starting context, letting it run its normal one-question-at-a-time clarification loop against the Open Questions and any gaps it finds. `brainstorming`'s output becomes the final `SPEC.md`.
+5. Once confirmed (or auto-approved in automatic mode), **REQUIRED SUB-SKILL:** use `superpowers:brainstorming` with the restructured draft as its starting context, letting it run its normal one-question-at-a-time clarification loop against the Open Questions and any gaps it finds. `brainstorming`'s output becomes the final `SPEC.md` — if the draft carried an auto-approval note, carry that note into the final `SPEC.md` too, so the audit trail survives the handoff.
 
 ## Quick Reference
 
