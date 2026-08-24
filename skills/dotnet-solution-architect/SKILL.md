@@ -17,7 +17,7 @@ Orchestrates a 6-stage pipeline from a raw requirement to a merged, tested, revi
 
 ## Pipeline State
 
-State lives in `docs/dotnet-solution-architect/<date>-<slug>-.das-state.json` (`<date>` = `YYYY-MM-DD` at Stage 1; `<slug>` kebab-case, 5-6 words, from the Goal line). Artifacts share that prefix — runs never collide.
+State lives in `docs/dotnet-solution-architect/<date>-<slug>-.das-state.json` (`<date>` = `YYYY-MM-DD` at Stage 1; `<slug>` as derived in Stage 1). Artifacts share that prefix — runs never collide.
 
 ```json
 {
@@ -33,17 +33,17 @@ State lives in `docs/dotnet-solution-architect/<date>-<slug>-.das-state.json` (`
 }
 ```
 
-Check for `*-.das-state.json` under `docs/dotnet-solution-architect/` at invocation start; if present, resume from `stage`, not restart at Stage 1 (mode/slug carry forward, never re-asked); if absent, derive `slug`/`mode` in Stage 1, create the file. Each stage advances `stage`, recording new paths (Stages 4, 6 differ).
+Check for `*-.das-state.json` under `docs/dotnet-solution-architect/` at invocation start; if present, resume from `stage`, not restart at Stage 1 (mode/slug carry forward, never re-asked); if absent, derive `slug`/`mode` in Stage 1, create the file. If more than one `*-.das-state.json` exists, resume the one whose slug matches the invocation's named feature; if none is named or more than one still matches, ask the user which run to resume rather than guessing. Each stage advances `stage`, recording new paths (Stages 4, 6 differ).
 
 ## The 6 Stages
 
 ### Stage 1 — Requirements
 
-`mode` = `"automatic"` only if explicitly requested, else `"with-user"`; `slug`: kebab-case, 5-6 words, from the Goal line. Create the state file, pass `mode` into `dictation-spec-writer` — its `brainstorming` loop/gate stay unaffected; its confirmation step is mode-conditional.
+`mode` = `"automatic"` only if explicitly requested, else `"with-user"`. Derive `slug` provisionally (kebab-case, 5-6 words) from the raw input before any draft exists; create the state file under that slug, then pass `mode` into `dictation-spec-writer` — its `brainstorming` loop/gate stay unaffected; its confirmation step is mode-conditional. Once the restructured draft's actual Goal line exists, refine `slug` if it differs materially, renaming any artifacts already written under the old slug.
 
 ### Stage 2 — Architecture & Decisions
 
-See Quick Reference for the skill order.
+`writing-plans` drafts the run's `PLAN.md`; `decision-recorder` runs once per significant decision made while drafting it, appending to the run's `DECISIONS.md`; `replan` then reviews `SPEC.md`/`DECISIONS.md`/the draft `PLAN.md` and always stops to ask on any gap, ambiguity, or contradiction — unconditional in both modes.
 
 ### Stage 3 — Isolated TDD Implementation
 
@@ -51,11 +51,11 @@ See Quick Reference for the skill order.
 
 ### Stage 4 — Hard Verification Gate
 
-`hard-verification-gate` gates the worktree: PASS stages the diff (`git add -A`; see Common Mistakes) and advances to `stage: 5`; Paused means STOP — leave `stage: 4`, present the report, never touch the worktree.
+`hard-verification-gate` gates the worktree: PASS stages the diff (`git add -A` in the worktree; see Common Mistakes) and advances to `stage: 5`; Paused means STOP — leave `stage: 4`, present the report, never touch the worktree.
 
 ### Stage 5 — Triple Parallel Audit
 
-`dispatching-parallel-agents` runs `reviewer-micro`/`macro`/`ops` against `git diff --staged` plus the run's `SPEC.md`, writing `docs/dotnet-solution-architect/<date>-<slug>-REVIEW_{MICRO,MACRO,OPS}.json`.
+`dispatching-parallel-agents` runs `reviewer-micro`/`macro`/`ops` against `git diff --staged` in the worktree. Since the run's `SPEC.md` lives in the target repo's `docs/`, not inside the worktree, the orchestrator passes each dispatched agent `SPEC.md`'s resolved content directly in its prompt (never a bare filename), along with the exact output path to write: `docs/dotnet-solution-architect/<date>-<slug>-REVIEW_{MICRO,MACRO,OPS}.json`.
 
 ### Stage 6 — Human Arbitration
 
@@ -82,4 +82,4 @@ See Quick Reference for the skill order.
 - **Re-provisioning the worktree on Fix & Loop re-entry.** Reuse the recorded one.
 - **Running Stage 5 against a failing build.** Stage 4 PASS is required.
 - **Forgetting to stage the diff after Stage 4 PASS.** No sub-skill runs `git add`; the orchestrator does it.
-- **Auto-resolving Stage 6.** Only when mode is `"automatic"` and all verdicts pass; else the user decides.
+- **Auto-resolving Stage 6 on anything short of all-`pass`.** Only skip the ask when mode is `"automatic"` and every verdict is `pass`; any `concerns`/`fail`, or `with-user` mode, means the user decides.
