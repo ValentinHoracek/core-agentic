@@ -51,7 +51,7 @@ See Quick Reference for the skill order.
 
 ### Stage 4 — Hard Verification Gate
 
-`hard-verification-gate` gates the worktree: PASS stages the diff (`git add -A`; see Common Mistakes) and advances to `stage: 5`; Paused means STOP — leave `stage: 4`, present the report, never touch it.
+`hard-verification-gate` gates the worktree: PASS stages the diff (`git add -A`; see Common Mistakes) and advances to `stage: 5`; Paused means STOP — leave `stage: 4`, present the report, never touch the worktree.
 
 ### Stage 5 — Triple Parallel Audit
 
