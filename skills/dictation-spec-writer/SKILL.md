@@ -1,41 +1,42 @@
 ---
 name: dictation-spec-writer
 type: atomic
-description: Use when a raw stream-of-consciousness or speech-to-text markdown dump describing a feature needs to be restructured into a clean draft requirements document before refinement
+description: Use when a raw stream-of-consciousness or speech-to-text markdown dump describes a feature and needs restructuring into a clean draft requirements document before refinement
 ---
 
 # Dictation Spec Writer
 
 ## Overview
 
-Takes an unstructured dictation dump (spoken stream-of-consciousness, transcribed to markdown) and restructures it into a clean, scannable first draft. Produces no new requirements — only reorganizes what was said. The draft is a starting point for later refinement, not a final spec.
+This skill takes an unstructured dictation dump (spoken stream-of-consciousness, transcribed to markdown). It puts the content into a clean first draft that is easy to scan. It adds no new requirements. It only puts what the speaker said into a new order. The draft is a start point for later refinement. It is not a final spec.
 
 ## Contract
 
 - **Inputs:**
-  - `dictation` — file path; required
-  - `confirm` — `yes | no`; optional, default `yes`
-  - `output` — file path; optional, default `DRAFT.md`
-- **Output:** `DRAFT.md` at the caller-given path — the five sections below, preceded by the auto-approval note when `confirm = no`
-- **Asks the user:** only whether the draft captures their intent, and only when `confirm = yes`
+  - `dictation` (file path, required)
+  - `confirm` (`yes | no`, optional, default `yes`)
+  - `output` (file path, optional, default `DRAFT.md`)
+- **Output:** `DRAFT.md` at the caller-given path. It contains the five sections below. When `confirm = no`, the auto-approval note comes before them.
+- **Asks the user:** One question only: does the draft show the intent of the user? The skill asks it only when `confirm = yes`.
 
 ## When to Use
 
-- Input is a raw `.md` file of dictated, unstructured text describing a feature or change.
-- Not for already-structured requirements documents — those need no restructuring.
+- The input is a raw `.md` file of dictated, unstructured text about a feature or change.
+- Do not use it for a requirements document that already has a structure. That document needs no restructuring.
 
 ## Process
 
-1. Read `dictation` completely.
-2. Extract and group content under exactly these five headings, in this order:
-   - **Goal** — one or two sentences: what outcome is wanted and why.
-   - **Requirements** — bullet list of concrete things the feature must do, phrased as plain statements (no jargon, no Given/When/Then).
-   - **Edge Cases** — bullet list of unusual situations, error conditions, or boundary behavior mentioned or implied.
-   - **Acceptance Criteria** — bullet list of checkable statements that would prove the feature works.
-   - **Open Questions** — bullet list of anything ambiguous, contradictory, or left unsaid in the dictation.
-3. Do not invent requirements that weren't stated or clearly implied. If something is unclear, put it in Open Questions rather than guessing.
-4. If `confirm = yes`: present the draft to the user and ask them to confirm it captures their intent. Apply their corrections and ask again until they confirm. If `confirm = no`: skip the question and make this the first line of the file: `> Auto-approved without user confirmation — YYYY-MM-DD` (today's date), so there is a visible record that no person confirmed the draft.
-5. Write the draft to `output`, then stop. The job ends at the file.
+1. Read all of `dictation`.
+2. Put the content under exactly these five headings, in this order:
+   - **Goal** — one or two sentences: the outcome that the speaker wants, and why.
+   - **Requirements** — a bullet list of concrete things that the feature must do. Write them as plain statements (no jargon, no Given/When/Then).
+   - **Edge Cases** — a bullet list of unusual situations, error conditions, or boundary behavior that the dictation mentions or implies.
+   - **Acceptance Criteria** — a bullet list of statements that a person can check to prove that the feature works.
+   - **Open Questions** — a bullet list of each item that is ambiguous, contradictory, or missing in the dictation.
+3. Do not add requirements that the dictation did not state or clearly imply. If an item is not clear, put it in Open Questions. Do not guess.
+4. If `confirm = yes`: show the draft to the user. Ask the user if the draft shows their intent. Apply their corrections. Ask again until the user says yes.
+5. If `confirm = no`: do not ask the question. Make this the first line of the file: `> Auto-approved without user confirmation — YYYY-MM-DD` (the date of today). This line is a visible record that no person approved the draft.
+6. Write the draft to `output`. Then stop. The job ends at the file.
 
 ## Quick Reference
 
@@ -49,7 +50,7 @@ Takes an unstructured dictation dump (spoken stream-of-consciousness, transcribe
 
 ## Common Mistakes
 
-- **Inventing structure that wasn't there.** If the dictation never mentions error handling, don't add an assumed edge case — leave it as an Open Question instead.
-- **Skipping the confirmation when `confirm = yes`.** The draft is a translation, not a design — the user must confirm it. Only `confirm = no` skips this, and only with the auto-approval note in place.
-- **Refining the draft.** Answering Open Questions or filling gaps is not this job — leave them listed.
-- **Formatting as Given/When/Then.** This skill deliberately produces plain-language sections, not BDD scenarios.
+- **Structure that the dictation did not have.** If the dictation never mentions error handling, do not add an edge case that you assume. Put the item in Open Questions.
+- **No approval question when `confirm = yes`.** The draft is a translation, not a design. The user must approve it. Only `confirm = no` removes the question, and only with the auto-approval note in place.
+- **Refining the draft.** It is not the job of this skill to answer Open Questions or to fill gaps. Keep them in the list.
+- **Given/When/Then format.** This skill writes plain-language sections on purpose, not BDD scenarios.

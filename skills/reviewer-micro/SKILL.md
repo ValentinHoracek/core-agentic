@@ -8,39 +8,39 @@ description: Use when a staged C# diff needs a focused review for Roslyn-level s
 
 ## Overview
 
-Reviews a staged C# diff for line-level code quality only — not architecture and layering, and not security and operations. Read-only: never edits code.
+This skill reviews a staged C# diff for line-level code quality only. Architecture, layering, security, and operations are out of scope. The skill is read-only. It never edits code.
 
 ## Contract
 
 - **Inputs:**
-  - `directory` — path of the git repository or worktree whose staged diff is reviewed; required
-  - `spec` — file path or the spec's content; required
-  - `output` — file path; optional, default `REVIEW_MICRO.json`
-- **Output:** `REVIEW_MICRO.json` at the caller-given path — findings and a verdict, in the JSON shape below
-- **Asks the user:** never
+  - `directory` (path of the git repository or worktree that has the staged diff, required)
+  - `spec` (file path or the content of the spec, required)
+  - `output` (file path, optional, default `REVIEW_MICRO.json`)
+- **Output:** `REVIEW_MICRO.json` at the caller-given path. It contains the findings and a verdict in the JSON shape below.
+- **Asks the user:** Never.
 
 ## When to Use
 
 - A staged C# diff needs a line-level code quality review.
-- Scope is deliberately narrow — do not comment on architecture, layering, security, or licensing here even if noticed.
+- The scope is narrow on purpose. Do not write findings about architecture, layering, security, or licensing, even if you see a problem.
 
 ## Review Scope
 
-- Null safety: missing null checks, incorrect nullable annotations, unguarded dereferences.
-- Async/await: `async void`, missing `ConfigureAwait` where relevant, blocking calls (`.Result`, `.Wait()`) on async code, unobserved tasks.
-- Allocations: unnecessary boxing, LINQ in hot paths, avoidable large object allocations.
-- General Roslyn-catchable issues: unused variables/usings, obvious analyzer-flaggable patterns.
+- Null safety: missing null checks, incorrect nullable annotations, and dereferences without a guard.
+- Async/await: `async void`, missing `ConfigureAwait` where it applies, blocking calls (`.Result`, `.Wait()`) on async code, and tasks that nothing observes.
+- Allocations: boxing that is not necessary, LINQ in hot paths, and large object allocations that you can avoid.
+- Other issues that Roslyn can find: unused variables or usings, and patterns that an analyzer flags.
 
 ## Process
 
-1. Read the staged diff (`git diff --staged` in `directory`) and enough of `spec` to understand intent — keep total context under roughly 2,000 tokens.
-2. Walk every changed line in scope (see Review Scope above). For each issue found, note the exact file and line number from the diff.
-3. Do not propose fixes outside this scope, even if noticed.
-4. Assign a verdict:
+1. Read the staged diff (`git diff --staged` in `directory`). Read enough of `spec` to understand the intent. Keep the total context below approximately 2,000 tokens.
+2. Examine each changed line that is in scope (see Review Scope). For each issue, record the exact file and line number from the diff.
+3. Do not propose fixes for issues outside this scope.
+4. Set the verdict:
    - `pass`: no findings, or only `minor` findings.
-   - `concerns`: at least one `major` finding, no `blocker`.
-   - `fail`: at least one `blocker` finding (e.g. a null-safety bug that will crash at runtime).
-5. Write `output`, matching exactly:
+   - `concerns`: one or more `major` findings, and no `blocker` finding.
+   - `fail`: one or more `blocker` findings (for example, a null-safety bug that causes a crash at runtime).
+5. Write `output`. It must match this shape exactly:
 
 ```json
 {
@@ -62,6 +62,6 @@ An empty `findings` array with `"verdict": "pass"` is a valid, complete result.
 
 ## Common Mistakes
 
-- **Commenting on architecture or security.** Out of scope — report only line-level code quality.
-- **Vague findings.** "Async could be better" is not usable; "line 42: `.Result` on an async call blocks the thread pool, use `await` instead" is.
-- **Skipping the verdict field, or picking `fail` for only minor issues.** `fail` is reserved for `blocker`-severity findings.
+- **Findings about architecture or security.** These are out of scope. Report only line-level code quality.
+- **Vague findings.** "Async could be better" is not usable. "line 42: `.Result` on an async call blocks the thread pool, use `await` instead" is usable.
+- **A missing verdict field, or `fail` for only minor issues.** Use `fail` only for `blocker`-severity findings.

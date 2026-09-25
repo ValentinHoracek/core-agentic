@@ -14,6 +14,7 @@ This repo is where skills are written and edited. Skills are invoked as `core-ag
   - `name` — equal to the folder name.
   - `type` — `hero` or `atomic`.
   - `description` — starts with "Use when…" and states the trigger condition, not the workflow.
+- Skill text is written in ASD-STE100 Strict (see the Check section).
 - `hero` skills are the only place that chains skills, runs loops (fail → debug → re-check), interprets `mode`, and chooses artifact paths. Heroes reference other skills by qualified name (`core-agentic:replan`, `superpowers:writing-plans`), never by file path.
 - `atomic` skills:
   - do one job;
@@ -31,9 +32,9 @@ Every atomic skill has this section directly after `## Overview`:
 ## Contract
 
 - **Inputs:**
-  - `<name>` — <file path | value>; <required | optional, default X>
-- **Output:** `<default file name>` at the caller-given path — <what it contains>
-- **Asks the user:** <never | when/what, own job only>
+  - `<name>` (<file path | value>, <required | optional, default X>)
+- **Output:** `<default file name>` at the caller-given path. <What it contains.>
+- **Asks the user:** <Never. | When and what, own job only.>
 ```
 
 A hero passes every input by its contract name and reads the output file, not the conversation, to decide the next step.
@@ -60,7 +61,17 @@ P='superpowers:|core-agentic:|Stage [0-9]|orchestrator|pipeline|\bmode\b|dotnet-
 for f in $(grep -l '^type: atomic' skills/*/SKILL.md); do grep -nHE "$P" "$f" | grep -vE ':[0-9]+:name: '; done
 ```
 
+Every `SKILL.md` must also have 0 hard ASD-STE100 violations:
+
+```bash
+for f in skills/*/SKILL.md; do python3 ~/.claude/skills/asd-ste100/scripts/ste-lint.py --json "$f" | python3 -c "import json,sys; h=json.load(sys.stdin)['hard_count']; print('$f', h) if h else None"; done
+```
+
 Extend `P` with the name of every new skill.
+
+## External dependencies
+
+- `asd-ste100` — user skill in `~/.claude/skills`. `dotnet-solution-architect` uses it in Stage 1 to rewrite the requirements draft in Simplified Technical English. Without it, the pipeline skips that step.
 
 ## Editing rules
 

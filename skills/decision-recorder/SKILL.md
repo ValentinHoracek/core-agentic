@@ -1,32 +1,32 @@
 ---
 name: decision-recorder
 type: atomic
-description: Use when a significant architecture or technical decision has just been made during planning and needs to be captured with its rationale before implementation begins
+description: Use when planning just produced a significant architecture or technical decision that needs a record of its rationale before implementation begins
 ---
 
 # Decision Recorder
 
 ## Overview
 
-Captures one technical decision as a short, structured entry in a decisions file, so future readers (including a future you) understand why the code looks the way it does, not just what it does. One entry per decision — don't batch unrelated decisions into one entry.
+This skill records one technical decision as a short, structured entry in a decisions file. Future readers can then understand why the code has its current form, not only what the code does. Write one entry for each decision. Do not put unrelated decisions into one entry.
 
 ## Contract
 
 - **Inputs:**
-  - `decision` — value: the decision and its context; required
-  - `decisions` — file path; optional, default `DECISIONS.md`
-- **Output:** one entry appended to the `decisions` file (created with a `# Decisions` heading if missing)
-- **Asks the user:** never
+  - `decision` (value: the decision and its context, required)
+  - `decisions` (file path, optional, default `DECISIONS.md`)
+- **Output:** one entry added at the end of the `decisions` file. If the file does not exist, the skill creates it with a `# Decisions` heading.
+- **Asks the user:** Never.
 
 ## When to Use
 
-- A choice was just made during planning that isn't obvious from the code alone (e.g. picking one library, pattern, or approach over another; a non-default configuration choice; a deliberate constraint).
-- Not for decisions with only one reasonable option — record only choices that involved a real trade-off.
+- Planning just made a choice that the code alone does not make clear. Examples: one library, pattern, or approach instead of another, a configuration value that is not the default, or a constraint that someone chose on purpose.
+- Do not use it for a decision that had only one reasonable option. Record only choices that had a real trade-off.
 
 ## Process
 
-1. Identify the decision in one sentence.
-2. Write an entry using this exact structure, appended to `decisions` (create the file with a `# Decisions` heading if it doesn't exist yet):
+1. Write the decision in one sentence.
+2. Add an entry with this exact structure at the end of `decisions`. If the file does not exist, create it with a `# Decisions` heading.
 
 ```markdown
 ## D-00N: <short decision title>
@@ -42,21 +42,21 @@ Captures one technical decision as a short, structured entry in a decisions file
 **Consequences:** <what this decision commits future work to, or rules out>
 ```
 
-3. Number entries sequentially (`D-001`, `D-002`, ...) by scanning existing entries in `decisions` and incrementing.
-4. Keep each field to 1–3 sentences. This is a record, not an essay.
+3. Give each entry the next number in sequence (`D-001`, `D-002`, ...). To find the next number, read the existing entries in `decisions` and add 1 to the highest number.
+4. Write 1 to 3 sentences in each field. The entry is a record, not an essay.
 
 ## Quick Reference
 
 | Field | One-line test |
 |---|---|
-| Decision | Could someone quote this back accurately in one sentence? |
-| Context | Does it explain what prompted the decision, not just restate it? |
-| Rationale | Does it say *why*, not just *what*? |
-| Alternatives Considered | Is there at least one real alternative named? |
-| Consequences | Does it say what this locks in or rules out going forward? |
+| Decision | Can a reader repeat the decision correctly in one sentence? |
+| Context | Does the field tell what caused the decision, not only repeat it? |
+| Rationale | Does the field tell *why*, not only *what*? |
+| Alternatives Considered | Does the field name one or more real alternatives? |
+| Consequences | Does the field tell what the decision makes necessary or prevents in the future? |
 
 ## Common Mistakes
 
-- **Recording the obvious.** If there was no real alternative, it's not a decision worth recording — it's just how the tech works.
-- **Vague rationale.** "It's better" is not a rationale. "It avoids the N+1 query pattern the current ORM would otherwise produce" is.
-- **Skipping Consequences.** The point of an ADR-lite entry is to save a future reader from re-litigating the choice — Consequences is what tells them whether that's still necessary.
+- **Recording the obvious.** If no real alternative existed, the choice is not a decision to record. It is only how the technology works.
+- **Vague rationale.** "It's better" is not a rationale. "It avoids the N+1 query pattern the current ORM would otherwise produce" is a rationale.
+- **No Consequences field.** An ADR-lite entry prevents a future reader from arguing the choice again. The Consequences field tells the reader if that argument is still necessary.
