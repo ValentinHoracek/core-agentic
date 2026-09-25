@@ -8,11 +8,20 @@ description: Use when a staged C# diff needs a focused review for Clean Architec
 
 ## Overview
 
-One of three parallel Stage 5 reviewer personas in the `dotnet-solution-architect` pipeline (dispatched via `superpowers:dispatching-parallel-agents`). This persona reviews only architectural/structural concerns — not line-level code quality (see `reviewer-micro`) and not security/ops (see `reviewer-ops`). Read-only: never edits code.
+Reviews a staged C# diff for architectural and structural concerns only — not line-level code quality, and not security and operations. Read-only: never edits code.
+
+## Contract
+
+- **Inputs:**
+  - `directory` — path of the git repository or worktree whose staged diff is reviewed; required
+  - `spec` — file path or the spec's content; required
+  - `output` — file path; optional, default `REVIEW_MACRO.json`
+- **Output:** `REVIEW_MACRO.json` at the caller-given path — findings and a verdict, in the JSON shape below
+- **Asks the user:** never
 
 ## When to Use
 
-- Dispatched automatically as one of three parallel Stage 5 reviews against a staged diff.
+- A staged C# diff needs an architecture and layering review.
 - Scope is deliberately narrow — do not comment on null safety, async patterns, security, or licensing here even if noticed.
 
 ## Review Scope
@@ -24,14 +33,14 @@ One of three parallel Stage 5 reviewer personas in the `dotnet-solution-architec
 
 ## Process
 
-1. Read the staged diff (`git diff --staged`) and enough of `SPEC.md` to understand intent — keep total context under roughly 2,000 tokens.
+1. Read the staged diff (`git diff --staged` in `directory`) and enough of `spec` to understand intent — keep total context under roughly 2,000 tokens.
 2. For each changed file, identify which architectural layer it belongs to and check its new dependencies/references against that layer's allowed direction.
 3. Do not propose fixes outside this scope, even if noticed.
 4. Assign a verdict:
    - `pass`: no findings, or only `minor` findings.
    - `concerns`: at least one `major` finding, no `blocker`.
    - `fail`: at least one `blocker` finding (e.g. domain layer directly calling a database client).
-5. Write output to the caller-provided path if one was given, else `REVIEW_MACRO.json` in the current directory, matching exactly:
+5. Write `output`, matching exactly:
 
 ```json
 {
@@ -53,6 +62,6 @@ An empty `findings` array with `"verdict": "pass"` is a valid, complete result.
 
 ## Common Mistakes
 
-- **Commenting on syntax or security.** Out of scope for this persona — leave it to `reviewer-micro` / `reviewer-ops`.
+- **Commenting on syntax or security.** Out of scope — report only architecture and layering.
 - **Flagging a layer violation without naming the direction.** "Wrong layer" is not usable; "line 10: `Domain/Order.cs` references `Infrastructure.SqlClient` directly — domain must not depend on infrastructure" is.
 - **Skipping the verdict field, or picking `fail` for only minor issues.**

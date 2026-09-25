@@ -8,17 +8,25 @@ description: Use when a significant architecture or technical decision has just 
 
 ## Overview
 
-Captures one technical decision as a short, structured entry in `DECISIONS.md`, so future readers (including a future you) understand why the code looks the way it does, not just what it does. One entry per decision — don't batch unrelated decisions into one entry.
+Captures one technical decision as a short, structured entry in a decisions file, so future readers (including a future you) understand why the code looks the way it does, not just what it does. One entry per decision — don't batch unrelated decisions into one entry.
+
+## Contract
+
+- **Inputs:**
+  - `decision` — value: the decision and its context; required
+  - `decisions` — file path; optional, default `DECISIONS.md`
+- **Output:** one entry appended to the `decisions` file (created with a `# Decisions` heading if missing)
+- **Asks the user:** never
 
 ## When to Use
 
-- A choice was just made during Stage 2 planning that isn't obvious from the code alone (e.g. picking one library, pattern, or approach over another; a non-default configuration choice; a deliberate constraint).
+- A choice was just made during planning that isn't obvious from the code alone (e.g. picking one library, pattern, or approach over another; a non-default configuration choice; a deliberate constraint).
 - Not for decisions with only one reasonable option — record only choices that involved a real trade-off.
 
 ## Process
 
 1. Identify the decision in one sentence.
-2. Write an entry using this exact structure, appended to the caller-provided `DECISIONS.md` path if one was given, else `DECISIONS.md` in the current directory (create the file with a `# Decisions` heading if it doesn't exist yet):
+2. Write an entry using this exact structure, appended to `decisions` (create the file with a `# Decisions` heading if it doesn't exist yet):
 
 ```markdown
 ## D-00N: <short decision title>
@@ -34,7 +42,7 @@ Captures one technical decision as a short, structured entry in `DECISIONS.md`, 
 **Consequences:** <what this decision commits future work to, or rules out>
 ```
 
-3. Number entries sequentially (`D-001`, `D-002`, ...) by scanning existing entries in `DECISIONS.md` and incrementing.
+3. Number entries sequentially (`D-001`, `D-002`, ...) by scanning existing entries in `decisions` and incrementing.
 4. Keep each field to 1–3 sentences. This is a record, not an essay.
 
 ## Quick Reference

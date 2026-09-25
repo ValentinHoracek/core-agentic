@@ -1,43 +1,68 @@
 ---
 name: hard-verification-gate
 type: atomic
-description: Use when implementation work in a worktree needs a binary pass/fail verification check (build, tests, architecture rules, container run) before it can proceed to code review
+description: Use when a .NET solution directory needs a binary pass/fail check (build, tests, architecture rules, container run) recorded in a report file
 ---
 
 # Hard Verification Gate
 
 ## Overview
 
-Runs the project's binary terminal checks and only lets work proceed to review if they all pass. On failure, hands off to `superpowers:systematic-debugging` rather than retrying blindly — and relies entirely on that skill's own stopping point rather than keeping a second counter. Never destroys the worktree automatically.
+Runs every binary check of a .NET solution and writes one report with a PASS or FAIL verdict. It only observes: it never fixes, retries, or changes source files. What happens after a FAIL is the caller's decision.
+
+## Contract
+
+- **Inputs:**
+  - `directory` — path to the solution root; required
+  - `output` — file path; optional, default `VERIFY.md`
+- **Output:** `VERIFY.md` at the caller-given path — verdict on line 1, a table of checks, the output tail of each failed check
+- **Asks the user:** never
 
 ## When to Use
 
-- Implementation work (Stage 3 of the `dotnet-solution-architect` pipeline) claims to be done and needs a go/no-go check before Stage 5 review.
-- Not a substitute for `superpowers:verification-before-completion`'s evidence-before-assertions discipline — this skill adds the specific "what happens on failure" handoff on top of it.
+- Work in a directory claims to be done and needs a go/no-go answer backed by real command output.
+- Not a debugger: it reports failures, it does not investigate them.
 
 ## Process
 
-1. Run every configured binary check for the solution: `dotnet build`, the test suite, architecture rules (e.g. ArchUnitNET), and any container/integration checks (e.g. `docker compose up --build` if the feature involves one). Capture full output of each.
-2. If every check passes: report PASS and proceed — this stage is done.
-3. If any check fails: **REQUIRED SUB-SKILL:** use `superpowers:systematic-debugging` on the failure, starting from Phase 1 (root cause investigation) with the captured output as evidence. Do not attempt a fix before it completes Phase 1.
-4. Let `systematic-debugging` run its own cycle (investigate → hypothesize → fix → verify) exactly as that skill defines it. Do not add a separate attempt counter here — `systematic-debugging` already stops itself and treats 3 failed fixes as a sign of an architectural problem rather than continuing.
-5. After each fix `systematic-debugging` proposes, re-run the full check suite from step 1 (not just the check that failed) before deciding whether to continue.
-6. If all checks now pass: report PASS and proceed.
-7. If `systematic-debugging` reaches its own stopping point (3 failed fixes, "question the architecture"): STOP. Report back to the user: what was tried, what's still failing (full output), and where the worktree is. **Do not delete, reset, or modify the worktree.** Wait for the user's decision.
-8. Reviewers (Stage 5) are never invoked while any check is failing — PASS is a hard prerequisite for Stage 5.
+1. In `directory`, determine the checks that apply:
+   - **build** — `dotnet build`
+   - **tests** — `dotnet test` (includes architecture rules when they are ArchUnitNET tests in the solution)
+   - **architecture rules** — any other configured architecture-rule command gets its own row
+   - **container** — `docker compose up --build --wait` (starts the services detached and waits until they are running or healthy), then always `docker compose down`; only if `directory` contains a compose file
+2. Run every check, even after one fails. Capture the full output of each. A check that cannot run (e.g. no solution file, `dotnet` missing) counts as `fail`; its error message is its output tail.
+3. Write `output` in this shape:
+
+   ````markdown
+   FAIL
+
+   | Check | Command | Result |
+   |---|---|---|
+   | build | `dotnet build` | pass |
+   | tests | `dotnet test` | fail |
+
+   ## Failures
+
+   ### tests
+
+   ```
+   <last ~50 lines of the failed command's output>
+   ```
+   ````
+
+   Line 1 is exactly `PASS` when every check passed, else exactly `FAIL`. With no failures, `## Failures` contains `(none)`.
+4. Stop. Do not attempt a fix.
 
 ## Quick Reference
 
-| Outcome | Action |
-|---|---|
-| All checks pass | Report PASS, proceed to Stage 5 |
-| Checks fail, first attempt | Hand off to `systematic-debugging` Phase 1 |
-| `systematic-debugging` fixes it | Re-run full check suite, then PASS |
-| `systematic-debugging` hits its 3-failed-fix stop | Pause, report to user, worktree untouched |
+| Outcome | Line 1 of the report | Failures section |
+|---|---|---|
+| All checks pass | `PASS` | `(none)` |
+| Any check fails | `FAIL` | One subsection per failed check with its output tail |
 
 ## Common Mistakes
 
-- **Adding a second retry counter.** `systematic-debugging` already has one (3 failed fixes → question the architecture). A second counter here just creates two conflicting thresholds.
-- **Wiping the worktree on failure.** Destroying in-progress work automatically is a hard-to-reverse action — always pause and let the user decide instead.
-- **Re-running only the failing check.** A fix for one check can break another; always re-run the full suite before declaring PASS.
-- **Letting a reviewer see a broken build.** PASS must be true before Stage 5 starts, no exceptions.
+- **Stopping at the first failure.** Run every check; the report lists every failure.
+- **Fixing the failure.** This skill reports. Fixing is not its job.
+- **Changing files in `directory`.** Build output (`bin/`, `obj/`) is expected; source, test and config files are never modified.
+- **Reporting a result without running the command.** Every row in the table comes from a command run in this invocation.
